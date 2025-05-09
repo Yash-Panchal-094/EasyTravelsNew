@@ -1,0 +1,273 @@
+SET search_path TO test5;
+
+CREATE TABLE IF NOT EXISTS users
+(
+    user_id integer NOT NULL,
+    first_name character varying(100) NOT NULL,
+    last_name character varying(100) NOT NULL,
+    mobile_no character varying(20) NOT NULL,
+    password character varying(50) NOT NULL,
+    PRIMARY KEY (user_id),
+    UNIQUE (mobile_no),
+    UNIQUE (password)
+);
+
+CREATE TABLE IF NOT EXISTS location
+(
+    location_id character varying(20) NOT NULL,
+    city character varying(100) NOT NULL,
+    state character varying(100) NOT NULL,
+    country character varying(100) NOT NULL,
+    PRIMARY KEY (location_id)
+);
+
+CREATE TABLE IF NOT EXISTS agency
+(
+    agency_id integer NOT NULL,
+    agency_name character varying(100) NOT NULL,
+    agency_email character varying(100) NOT NULL,
+    agency_website character varying(100) NOT NULL,
+    commission_rate double precision NOT NULL,
+    PRIMARY KEY (agency_id),
+    UNIQUE (agency_name, agency_email)
+);
+
+CREATE TABLE IF NOT EXISTS postal
+(
+    postal_code integer NOT NULL,
+    location_id character varying(20) NOT NULL,
+    PRIMARY KEY (postal_code),
+    FOREIGN KEY (location_id) REFERENCES test5.location (location_id)
+);
+
+CREATE TABLE IF NOT EXISTS address
+(
+    agency_id integer NOT NULL,
+    postal_code integer NOT NULL,
+    local_address character varying(200) NOT NULL,
+    PRIMARY KEY (agency_id, postal_code),
+    FOREIGN KEY (agency_id) REFERENCES test5.agency (agency_id),
+    FOREIGN KEY (postal_code) REFERENCES test5.postal (postal_code)
+);
+
+CREATE TABLE IF NOT EXISTS payments
+(
+    payment_id integer NOT NULL,
+    user_id integer NOT NULL,
+    payment_method character varying(100) NOT NULL,
+    payment_date date NOT NULL,
+    status character varying(100) NOT NULL,
+    PRIMARY KEY (payment_id),
+    FOREIGN KEY (user_id) REFERENCES test5.users (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS services
+(
+    service_id integer NOT NULL,
+    agency_id integer NOT NULL,
+    service_name character varying(50) NOT NULL,
+    PRIMARY KEY (service_id)
+);
+
+CREATE TABLE IF NOT EXISTS bookings
+(
+    booking_id integer NOT NULL,
+    user_id integer NOT NULL,
+    payment_id integer NOT NULL,
+    booking_date date NOT NULL,
+    total_amount double precision NOT NULL,
+    PRIMARY KEY (booking_id),
+    FOREIGN KEY (user_id) REFERENCES test5.users (user_id),
+    FOREIGN KEY (payment_id) REFERENCES test5.payments (payment_id)
+);
+
+CREATE TABLE IF NOT EXISTS transport_booking
+(
+    booking_id integer NOT NULL,
+    service_id integer NOT NULL,
+    departure_location_id character varying(20) NOT NULL,
+    arrival_location_id character varying(20) NOT NULL,
+    journey_date date NOT NULL,
+    ticket_no character varying(20) NOT NULL,
+    seat_no character varying(10) NOT NULL,
+    PRIMARY KEY (booking_id),
+    FOREIGN KEY (departure_location_id) REFERENCES test5.location (location_id),
+    FOREIGN KEY (arrival_location_id) REFERENCES test5.location (location_id),
+    FOREIGN KEY (service_id) REFERENCES test5.services (service_id),
+    FOREIGN KEY (booking_id) REFERENCES test5.bookings (booking_id)
+);
+
+CREATE TABLE IF NOT EXISTS bus_stand
+(
+    location_id character varying(20) NOT NULL,
+    location_name character varying(50) NOT NULL,
+    PRIMARY KEY (location_id),
+    FOREIGN KEY (location_id) REFERENCES test5.location (location_id)
+);
+
+CREATE TABLE IF NOT EXISTS bus
+(
+    bus_id character varying(20) NOT NULL,
+    stand_id character varying(20) NOT NULL,
+    trip_code character varying(50) NOT NULL,
+    arrival_time time with time zone NOT NULL,
+    departure_time time with time zone NOT NULL,
+    day integer NOT NULL,
+    PRIMARY KEY (bus_id, stand_id, trip_code),
+    FOREIGN KEY (stand_id) REFERENCES test5.bus_stand (location_id),
+    FOREIGN KEY (bus_id) REFERENCES test5.bus_info (bus_id)
+);
+
+CREATE TABLE IF NOT EXISTS bus_class
+(
+    bus_class_id character varying(50) NOT NULL,
+    bus_id character varying(20) NOT NULL,
+    capacity integer NOT NULL,
+    price double precision NOT NULL,
+    currency character varying(20) NOT NULL,
+    PRIMARY KEY (bus_class_id, bus_id),
+    FOREIGN KEY (bus_id) REFERENCES test5.bus_info (bus_id)
+);
+
+CREATE TABLE IF NOT EXISTS train_station
+(
+    location_id character varying(20) NOT NULL,
+    station_name character varying(50) NOT NULL,
+    PRIMARY KEY (location_id),
+    FOREIGN KEY (location_id) REFERENCES test5.location (location_id)
+);
+
+CREATE TABLE IF NOT EXISTS train
+(
+    train_id character varying(50) NOT NULL,
+    station_id character varying(20) NOT NULL,
+    trip_code character varying(50) NOT NULL,
+    arrival_time time with time zone NOT NULL,
+    departure_time time with time zone NOT NULL,
+    day integer NOT NULL,
+    PRIMARY KEY (train_id, station_id, trip_code),
+    FOREIGN KEY (station_id) REFERENCES test5.train_station (location_id),
+    FOREIGN KEY (train_id) REFERENCES test5.train_info (train_id)
+);
+
+CREATE TABLE IF NOT EXISTS train_class
+(
+    train_class_id character varying(50) NOT NULL,
+    train_id character varying(50) NOT NULL,
+    capacity integer NOT NULL,
+    price double precision NOT NULL,
+    currency character varying(20) NOT NULL,
+    PRIMARY KEY (train_class_id, train_id),
+    FOREIGN KEY (train_id) REFERENCES test5.train_info (train_id)
+);
+
+CREATE TABLE IF NOT EXISTS flight
+(
+    flight_code character varying(50) NOT NULL,
+    airport_code character varying(20) NOT NULL,
+    trip_code character varying(50) NOT NULL,
+    arrival_time time with time zone NOT NULL,
+    departure_time time with time zone NOT NULL,
+    day integer NOT NULL,
+    PRIMARY KEY (flight_code, airport_code, trip_code),
+    FOREIGN KEY (airport_code) REFERENCES test5.airport (location_id),
+    FOREIGN KEY (flight_code) REFERENCES test5.flight_info (flight_code)
+);
+
+CREATE TABLE IF NOT EXISTS flight_class
+(
+    flight_class_id character varying(50) NOT NULL,
+    flight_code character varying(50) NOT NULL,
+    capacity integer NOT NULL,
+    price double precision NOT NULL,
+    currency character varying(20) NOT NULL,
+    PRIMARY KEY (flight_class_id, flight_code),
+    FOREIGN KEY (flight_code) REFERENCES test5.flight_info (flight_code)
+);
+
+CREATE TABLE IF NOT EXISTS airport
+(
+    location_id character varying(20) NOT NULL,
+    airport_name character varying(50) NOT NULL,
+    PRIMARY KEY (location_id),
+    FOREIGN KEY (location_id) REFERENCES test5.location (location_id)
+);
+
+CREATE TABLE IF NOT EXISTS accommodation_booking
+(
+    booking_id integer NOT NULL,
+    service_id integer NOT NULL,
+    location_id character varying(20) NOT NULL,
+    check_in_date date NOT NULL,
+    check_out_date date NOT NULL,
+    head_count integer NOT NULL,
+    PRIMARY KEY (booking_id),
+    FOREIGN KEY (location_id) REFERENCES test5.location (location_id),
+    FOREIGN KEY (booking_id) REFERENCES test5.bookings (booking_id),
+    FOREIGN KEY (service_id) REFERENCES test5.services (service_id)
+);
+
+CREATE TABLE IF NOT EXISTS room_booking
+(
+    booking_id integer NOT NULL,
+    room_id character varying(20) NOT NULL,
+    service_id integer NOT NULL,
+    PRIMARY KEY (booking_id, room_id, service_id),
+    FOREIGN KEY (booking_id) REFERENCES test5.accommodation_booking (booking_id),
+    FOREIGN KEY (room_id, service_id) REFERENCES test5.room (room_id, service_id)
+);
+
+CREATE TABLE IF NOT EXISTS room_class
+(
+    room_class_id character varying(50) NOT NULL,
+    class_name character varying(100) NOT NULL,
+    price double precision NOT NULL,
+    currency character varying(20) NOT NULL,
+    PRIMARY KEY (room_class_id)
+);
+
+CREATE TABLE IF NOT EXISTS room
+(
+    room_id character varying(20) NOT NULL,
+    service_id integer NOT NULL,
+    room_class_id character varying(50) NOT NULL,
+    location_id character varying(20) NOT NULL,
+    status character varying(50) NOT NULL,
+    PRIMARY KEY (room_id, service_id),
+    FOREIGN KEY (location_id) REFERENCES test5.location (location_id),
+    FOREIGN KEY (room_class_id) REFERENCES test5.room_class (room_class_id),
+    FOREIGN KEY (service_id) REFERENCES test5.services (service_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_email
+(
+    user_id integer NOT NULL,
+    email_address character varying(100) NOT NULL,
+    PRIMARY KEY (user_id, email_address),
+    UNIQUE (email_address),
+    FOREIGN KEY (user_id) REFERENCES test5.users (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS train_info
+(
+    train_id character varying(50) NOT NULL,
+    service_id integer NOT NULL,
+    PRIMARY KEY (train_id),
+    FOREIGN KEY (service_id) REFERENCES test5.services (service_id)
+);
+
+CREATE TABLE IF NOT EXISTS flight_info
+(
+    flight_code character varying(50) NOT NULL,
+    service_id integer NOT NULL,
+    PRIMARY KEY (flight_code),
+    FOREIGN KEY (service_id) REFERENCES test5.services (service_id)
+);
+
+CREATE TABLE IF NOT EXISTS bus_info
+(
+    bus_id character varying(20) NOT NULL,
+    service_id integer NOT NULL,
+    PRIMARY KEY (bus_id),
+    FOREIGN KEY (service_id) REFERENCES test5.services (service_id)
+);
